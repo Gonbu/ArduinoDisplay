@@ -14,52 +14,31 @@ public:
     ConnectionManager(const char *ssid, const char *password)
         : ssid(ssid), password(password)
     {
-        Serial.begin(115200);
     }
 
     void connect()
     {
-        int networks = WiFi.scanNetworks();
-
-        for (int i = 0; i < networks; i++)
+        if (WiFi.status() != WL_CONNECTED)
         {
-            String targetSSID = WiFi.SSID(i);
-            Serial.print("Network: ");
-            Serial.println(targetSSID);
-
-            if (targetSSID == ssid)
+            Serial.print("Connexion Wi-Fi.");
+            WiFi.begin(ssid, password);
+            int attempts = maxAttempts;
+            while (WiFi.status() != WL_CONNECTED && attempts > 0)
             {
-                Serial.println("Found matching target network");
-                WiFi.begin(ssid, password);
-                Serial.print("Connecting to target network");
-
-                int attempts = maxAttempts;
-                while (WiFi.status() != WL_CONNECTED && attempts > 0)
-                {
-                    delay(1000);
-                    Serial.print(".");
-                    attempts--;
-                }
-                Serial.println(".");
-
-                if (WiFi.status() == WL_CONNECTED)
-                {
-                    Serial.println("Connected to target network");
-                    return;
-                }
-                else
-                {
-                    Serial.println("Could not connect to target network");
-                }
+                delay(1000);
+                Serial.print(".");
+                attempts--;
             }
-        }
-
-        Serial.println("Target network not found, trying autoconnect...");
-        if (!wifiManager.autoConnect("AMCDeviceAP", "zazawiwinono"))
-        {
-            Serial.println("⚠️ Auto-Connection failed, restarting...");
-            delay(3000);
-            ESP.restart();
+            Serial.println();
+            if (WiFi.status() == WL_CONNECTED)
+            {
+                Serial.println("Connecté au Wi-Fi !");
+            }
+            else
+            {
+                Serial.println("Impossible de se connecter au Wi-Fi.");
+                wifiManager.autoConnect("AMCDeviceAP", "zazawiwinono");
+            }
         }
     }
 

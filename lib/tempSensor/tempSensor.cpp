@@ -16,7 +16,7 @@ void TempSensor::readSensor()
 
   if (isnan(humidity) || isnan(temperatureC) || isnan(temperatureF))
   {
-    Serial.println("Failed to read from DHT sensor!");
+    Serial.println("Impossible de lire les données du capteur DHT.");
     humidity = temperatureC = temperatureF = NAN;
   }
 }

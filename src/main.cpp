@@ -19,7 +19,7 @@ const char *mqttClientId = "BillieClient7755";
 
 // Création d'instances MQTT
 WiFiClient espClient;
-MQTTManager mqttManager(espClient, mqttServer, mqttPort, mqttClientId, mqttTopic);
+MQTTManager mqttManager(espClient, mqttServer, mqttPort, mqttClientId, mqttTopic, matrix);
 
 // Function to handle Wi-Fi connection
 void connectWiFi()
@@ -76,36 +76,42 @@ String readHumidity()
   return String(sensor.getHumidity());
 }
 
-// Function to update the LED matrix display
-void displayData(String currentTime, String temp, String hum)
-{
-  matrix.update(currentTime + ", " + temp + " C");
-  matrix.update(currentTime + ", " + hum + " %");
-}
-
-// Function to publish the data to MQTT
-void publishMQTTMessage(String temp, String hum, String currentTime)
-{
-  String payload = "Temp: " + temp + " C, Hum: " + hum + " %, Time: " + currentTime;
-  mqttManager.publishMessage(payload);
-}
-
 void loop()
 {
   handleConnections();
-
-  // Read sensor data
-  String temp = readSensorData();
-  String hum = readHumidity();
-  String currentTime = timeManager.getCurrentTime();
-
-  // Display on LED matrix
-  displayData(currentTime, temp, hum);
-
-  // Publish message to MQTT
-  publishMQTTMessage(temp, hum, currentTime);
-
   mqttManager.loop();
 
-  delay(1000); // Adjust this delay as needed
+  // Si aucune animation n’est en cours, afficher l’heure
+  if (!matrix.isAnimationInProgress())
+  {
+    if (!mqttManager.getMessageQueue().empty() || mqttManager.getIsPriorityMessageInProgress())
+    {
+      // Si des messages MQTT sont en attente ou en cours, traiter la queue
+      mqttManager.processQueue();
+    }
+    else
+    {
+      // Sinon, afficher les données par défaut
+      static unsigned long lastUpdate = 0;
+      unsigned long now = millis();
+
+      // Actualisation toutes les 5 secondes
+      if (now - lastUpdate >= 5000)
+      {
+        String temp = readSensorData();
+        String hum = readHumidity();
+        String currentTime = timeManager.getCurrentTime();
+        String message = currentTime + ", " + temp + " C, " + hum + " %";
+
+        Serial.println("🕒 Affichage des données par défaut : " + message);
+
+        matrix.startAnimation(message);
+        lastUpdate = now;
+      }
+    }
+  }
+  else
+  {
+    matrix.stepAnimation();
+  }
 }

@@ -9,13 +9,37 @@ void LEDMatrix::initialize()
     Display.displayClear();
 }
 
-void LEDMatrix::update(String message)
+void LEDMatrix::startAnimation(String message)
 {
     if (message.length() > 0)
     {
-        Display.displayText(message.c_str(), PA_CENTER, 100, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
-        while (!Display.displayAnimate())
+        char *msg = new char[message.length() + 1];
+        strcpy(msg, message.c_str());
+
+        if (animationInProgress)
         {
+            Display.displayClear();
+            Display.displayReset();
+        }
+
+        Display.displayText(msg, PA_CENTER, 100, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+        animationInProgress = true;
+    }
+}
+
+bool LEDMatrix::stepAnimation()
+{
+    if (animationInProgress)
+    {
+        if (Display.displayAnimate())
+        {
+            animationInProgress = false;
         }
     }
+    return animationInProgress;
+}
+
+bool LEDMatrix::isAnimationInProgress() const
+{
+    return animationInProgress;
 }

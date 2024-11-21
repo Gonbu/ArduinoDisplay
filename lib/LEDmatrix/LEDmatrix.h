@@ -2,7 +2,7 @@
 #define LEDMATRIX_H
 
 #include <MD_Parola.h>
-#include <MD_MAX72xx.h>
+#include <Arduino.h>
 #include <SPI.h>
 
 // Configuration matérielle
@@ -15,10 +15,13 @@ class LEDMatrix
 public:
     LEDMatrix();
     void initialize();
-    void update(String message);
+    void startAnimation(String message);
+    bool stepAnimation();
+    bool isAnimationInProgress() const;
 
 private:
     MD_Parola Display;
+    bool animationInProgress = false;
 };
 
 #endif // LEDMATRIX_H
